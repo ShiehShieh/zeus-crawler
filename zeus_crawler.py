@@ -9,7 +9,10 @@
 # @date 2014-10-07
 
 
-import os, re, requests, optparse, bs4, time
+import os
+import time
+import requests
+import optparse
 from os.path import splitext, dirname, isdir, exists
 from urlparse import urlparse, urljoin
 from gevent.pool import Pool
@@ -18,8 +21,8 @@ from bs4 import BeautifulSoup
 monkey.patch_all()
 
 
-VERSION = 'v1.0.0.0'
-USAGE   = "usage: %prog [options] arg1 arg2"
+VERSION = 'v1.0.0'
+USAGE = "usage: %prog [options] arg1 arg2"
 
 
 def get_options():
@@ -30,11 +33,13 @@ def get_options():
     parser = optparse.OptionParser(usage=USAGE, version=VERSION)
 
     parser.add_option('-m', '--main', action='store', type='string',
-            help='Main Page.', dest='url')
+                      help='Main Page.', dest='url')
+    parser.add_option('-p', '--pool', action='store', type='int',
+                      help='Size of pool.', dest='pool')
     parser.add_option('-t', '--test', action='store_true', dest='test',
-            help='Test the difference between sync and async.')
+                      help='Test the difference between sync and async.')
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
-            help='Output verbosely.')
+                      help='Output verbosely.')
 
     return parser.parse_args()
 
@@ -52,11 +57,21 @@ def log_time(fn):
         result = fn(*args, **kwargs)
 
         end_time = time.time()
-        print 'Time used : %d' %(end_time - start_time)
+        print_info('Time used : {0}'.format(end_time - start_time))
 
         return result
 
     return wrapper
+
+
+def print_info(info):
+    """TODO: Docstring for print_info.
+
+    :info: TODO
+    :returns: TODO
+
+    """
+    print '\033[;32m%s\033[0m' % (info)
 
 
 def print_warning(warning):
@@ -66,7 +81,7 @@ def print_warning(warning):
     :returns: TODO
 
     """
-    print '\033[;33m%s\033[0m' %(warning)
+    print '\033[;33m%s\033[0m' % (warning)
 
 
 def print_error(error_type):
@@ -76,7 +91,7 @@ def print_error(error_type):
     :returns: TODO
 
     """
-    print '\033[;31m%s\033[0m' %(error_type)
+    print '\033[;31m%s\033[0m' % (error_type)
 
 
 def download_url(url):
@@ -88,7 +103,7 @@ def download_url(url):
     """
     url_data = requests.get(url)
 
-    print '%s has been downloaded.' %(url)
+    print '%s has been downloaded.' % (url)
 
     return url_data
 
@@ -112,7 +127,7 @@ def asynchronous_download():
     :returns: TODO
 
     """
-    greenlets = Pool(10)
+    greenlets = Pool(20)
     with open('url_list.txt', 'r') as url_list:
         greenlets.map(download_url, [x.strip('\n') for x in url_list])
 
@@ -162,8 +177,8 @@ def make_file(url, default='index.html'):
 
     """
     path = url_to_path(url, default)
-
     ldir = dirname(path)
+
     if not isdir(ldir):
         exists(ldir) and os.unlink(ldir)
         os.makedirs(ldir)
@@ -179,12 +194,11 @@ def complete_url(curr_path, subdomain):
     :returns: TODO
 
     """
-    if subdomain == None:
-        url = None
+    if subdomain is None or \
+            urlparse(curr_path).netloc == urlparse(subdomain).netloc:
+        url = subdomain
     elif urlparse(subdomain).netloc == '':
         url = urljoin(curr_path, urlparse(subdomain).path)
-    elif urlparse(curr_path).netloc == urlparse(subdomain).netloc:
-        url = subdomain
     else:
         url = None
 
@@ -198,19 +212,18 @@ def get_whole_website(url, greenlet_pool):
     :returns: TODO
 
     """
-    Timeout(180).start()
+    Timeout(120).start()
     try:
-        if is_file_exists(url) or url == None:
+        if is_file_exists(url) or url is None:
             print_warning(url + ' already exists or invalid.')
             return True
 
         content = requests.get(url)
         with open(make_file(url), 'w') as temp:
             temp.write(content.text)
-            print '%s has been write into file.' %(url)
+            print '%s has been write into file.' % (url)
 
-        soup = BeautifulSoup(content.text)
-        all_href = soup.find_all(href=True)
+        all_href = BeautifulSoup(content.text).find_all(href=True)
         links = set(map(complete_url,
                         (url for i in all_href),
                         (i.get('href') for i in all_href)))
@@ -222,11 +235,11 @@ def get_whole_website(url, greenlet_pool):
     except requests.exceptions.ConnectionError:
         print_error('Caught ConnectionError@' + url)
     except Timeout:
-        print_warning('Timeout@' + url)
+        print_warning('Greenlet Timeout@' + url)
     except requests.exceptions.ReadTimeout:
         print_warning('Caught ReadTimeout@' + url)
-
-    return True
+    finally:
+        return True
 
 
 @log_time

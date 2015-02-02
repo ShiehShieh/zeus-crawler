@@ -59,6 +59,26 @@ def log_time(fn):
     return wrapper
 
 
+def print_warning(warning):
+    """TODO: Docstring for print_warning.
+
+    :warning: TODO
+    :returns: TODO
+
+    """
+    print '\033[;33m%s\033[0m' %(warning)
+
+
+def print_error(error_type):
+    """TODO: Docstring for print_error.
+
+    :errorname: TODO
+    :returns: TODO
+
+    """
+    print '\033[;31m%s\033[0m' %(error_type)
+
+
 def download_url(url):
     """TODO: Docstring for download_url.
 
@@ -169,26 +189,6 @@ def complete_url(curr_path, subdomain):
         url = None
 
     return url
-
-
-def print_warning(warning):
-    """TODO: Docstring for print_warning.
-
-    :warning: TODO
-    :returns: TODO
-
-    """
-    print '\033[;33m%s\033[0m' %(warning)
-
-
-def print_error(error_type):
-    """TODO: Docstring for print_error.
-
-    :errorname: TODO
-    :returns: TODO
-
-    """
-    print '\033[;31m%s\033[0m' %(error_type)
 
 
 def get_whole_website(url, greenlet_pool):

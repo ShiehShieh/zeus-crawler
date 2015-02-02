@@ -213,11 +213,11 @@ def get_whole_website(url, greenlet_pool):
 
     """
     Timeout(120).start()
-    try:
-        if is_file_exists(url) or url is None:
-            print_warning(url + ' already exists or invalid.')
-            return True
+    if is_file_exists(url) or url is None:
+        print_warning(url + ' already exists or invalid.')
+        return True
 
+    try:
         content = requests.get(url)
         with open(make_file(url), 'w') as temp:
             temp.write(content.text)
@@ -252,7 +252,7 @@ def main():
     greenlet_pool = Pool(500)
 
     options.url and get_whole_website(options.url, greenlet_pool) or \
-            options.test and synchronous_download() and asynchronous_download()
+        options.test and synchronous_download() and asynchronous_download()
 
     greenlet_pool.join()
 

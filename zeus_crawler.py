@@ -14,10 +14,11 @@ import time
 import requests
 import optparse
 from os.path import splitext, dirname, isdir, exists
+from functools import wraps
 from urlparse import urlparse, urljoin
+from bs4 import BeautifulSoup
 from gevent.pool import Pool
 from gevent import monkey, Timeout
-from bs4 import BeautifulSoup
 monkey.patch_all()
 
 
@@ -51,6 +52,7 @@ def log_time(fn):
     :returns: TODO
 
     """
+    @wraps(fn)
     def wrapper(*args, **kwargs):
         start_time = time.time()
 

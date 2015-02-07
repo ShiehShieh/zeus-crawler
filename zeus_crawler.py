@@ -36,7 +36,7 @@ def get_options():
     parser.add_option('-m', '--main', action='store', type='string',
                       help='Main Page.', dest='url')
     parser.add_option('-p', '--pool', action='store', type='int',
-                      help='Size of pool.', dest='pool')
+                      help='Size of pool.', dest='pool', default=500)
     parser.add_option('-t', '--test', action='store_true', dest='test',
                       help='Test the difference between sync and async.')
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
@@ -105,7 +105,7 @@ def download_url(url):
     """
     url_data = requests.get(url)
 
-    print '%s has been downloaded.' % (url)
+    # print '%s has been downloaded.' % (url)
 
     return url_data
 
@@ -251,7 +251,7 @@ def main():
 
     """
     (options, args) = get_options()
-    greenlet_pool = Pool(500)
+    greenlet_pool = Pool(options.pool)
 
     options.url and get_whole_website(options.url, greenlet_pool) or \
         options.test and synchronous_download() and asynchronous_download()

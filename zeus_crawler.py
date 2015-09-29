@@ -214,7 +214,8 @@ def get_whole_website(url, greenlet_pool):
     :returns: TODO
 
     """
-    Timeout(120).start()
+    timer = Timeout(120)
+    timer.start()
     if is_file_exists(url) or url is None:
         print_warning(url + ' already exists or invalid.')
         return True
@@ -241,6 +242,7 @@ def get_whole_website(url, greenlet_pool):
     except requests.exceptions.ReadTimeout:
         print_warning('Caught ReadTimeout@' + url)
     finally:
+        timer.cancel()
         return True
 
 
